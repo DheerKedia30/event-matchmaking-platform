@@ -1,0 +1,65 @@
+/* Base rules that apply to every page. Uses the variables from theme.css. */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  margin: 0 0 0.5rem;
+}
+
+a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+/* Reusable pieces the whole app will share */
+.card {
+  background: var(--card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 16px;
+}
+
+.btn {
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: var(--radius-pill);
+  color: #1a1420;
+  background: var(--gradient);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.btn:hover {
+  box-shadow: 0 0 18px rgba(255, 122, 89, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--gold);
+  border: 0.5px solid var(--gold);
+}
+
+.chip {
+  display: inline-block;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: var(--radius-chip);
+  border: 0.5px solid var(--border);
+  color: var(--muted);
+}

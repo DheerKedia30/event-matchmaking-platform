@@ -1,0 +1,33 @@
+/* THEME: "Luxe disco"
+   Every color, font and shape in the app comes from the variables below.
+   To restyle the whole app later, change them HERE and nowhere else. */
+:root {
+  /* surfaces */
+  --bg: #0d0a12;        /* page background */
+  --bg-soft: #14101a;   /* banners, hero */
+  --card: #1a1420;      /* cards, panels */
+  --border: #33283a;    /* thin card borders */
+
+  /* text */
+  --text: #fbf4ea;
+  --muted: #b5a6a8;
+
+  /* brand colors */
+  --gold: #f6c453;      /* dates, tickets, trust badge, hold countdown */
+  --coral: #ff7a59;
+  --pink: #ff3d8b;
+  --gradient: linear-gradient(90deg, #f6c453, #ff7a59, #ff3d8b);
+
+  /* status */
+  --green: #3ddc97;     /* locked in, paid */
+  --red: #ff5470;       /* penalty, blocked, errors */
+
+  /* shapes */
+  --radius-card: 16px;
+  --radius-chip: 8px;
+  --radius-pill: 999px;
+
+  /* fonts */
+  --font-heading: "Playfair Display", serif;
+  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
+}

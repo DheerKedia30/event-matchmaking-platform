@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dsznajder.es7-react-js-snippets",
+    "formulahendry.auto-rename-tag",
+    "ms-python.python",
+    "rangav.vscode-thunder-client",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+    "usernamehw.errorlens",
+    "eamodio.gitlens"
+  ]
+}
