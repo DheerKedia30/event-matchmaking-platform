@@ -8,5 +8,7 @@ module.exports = {
   LOCKED_LEAVE_PENALTY: 10,  // points lost for leaving after locking in
   TRUST_AFTER_BLOCK: 10,     // trust score reset after a block ends
   BLOCK_DURATION_MIN: 5,     // demo value (real design: 7 days = 10080 minutes)
-  PAYMENT_WINDOW_MIN: 10     // time the group has to pay after seats are held
+  PAYMENT_WINDOW_MIN: 10,    // time the group has to pay after seats are held
+  MIN_AGE: 18,               // meeting strangers: adults only
+  MAX_AGE: 100
 };

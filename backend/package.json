@@ -7,12 +7,14 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "db:init": "node src/db/init.js",
-    "db:seed": "node src/db/seed.js"
+    "db:seed": "node src/db/seed.js",
+    "test": "node --test"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "firebase-admin": "^14.5.0",
     "pg": "^8.12.0"
   }
 }
