@@ -4,3 +4,4 @@ venv
 __pycache__
 dist
 .DS_Store
+*service-account*.json
