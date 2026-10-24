@@ -6,3 +6,12 @@ export const LANGUAGES = ["english", "hindi", "marathi", "gujarati", "tamil", "b
 export const GENDERS = ["male", "female", "other"];
 export const MIN_AGE = 18;
 export const MAX_AGE = 100;
+
+// Event categories: the value the backend uses, the label we show, and an icon.
+export const CATEGORIES = [
+  { value: "concert", label: "Concert", icon: "🎸" },
+  { value: "comedy", label: "Comedy", icon: "🎤" },
+  { value: "theatre", label: "Theatre", icon: "🎭" },
+];
+export const categoryInfo = (value) =>
+  CATEGORIES.find((c) => c.value === value) || { value, label: value, icon: "🎟️" };

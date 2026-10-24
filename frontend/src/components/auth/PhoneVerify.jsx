@@ -57,9 +57,18 @@ export default function PhoneVerify() {
     setBusy(true);
     try {
       await confirmation.confirm(code); // Firebase checks the code
-      await finish();                   // our backend double-checks with Firebase
+      await finish(); // our backend double-checks with Firebase
     } catch (err) {
-      setError(friendlyError(err));
+      if (err.code === "auth/provider-already-linked") {
+        // The phone got linked already (e.g. Verify was clicked twice). Just finish up.
+        try {
+          await finish();
+        } catch (e2) {
+          setError(friendlyError(e2));
+        }
+      } else {
+        setError(friendlyError(err));
+      }
     } finally {
       setBusy(false);
     }

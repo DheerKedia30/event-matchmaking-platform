@@ -1,27 +1,56 @@
-// TEMPORARY page for Checkpoint 1. In CP2 this becomes the events list.
-// The buttons let you PROVE the login and the phone-verified rule work.
-import { useState } from "react";
+// The real home page: hero with search, category chips and the events grid.
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getMe, callVerifiedOnly } from "../api/authApi";
+import { listEvents } from "../api/eventsApi";
+import { CATEGORIES } from "../constants";
+import EventCard from "../components/events/EventCard";
+import Loader from "../components/shared/Loader";
 import Notice from "../components/shared/Notice";
 
 export default function HomePage() {
   const { dbUser } = useAuth();
-  const [result, setResult] = useState(null);
+  const [q, setQ] = useState("");
+  const [category, setCategory] = useState(""); // "" = All
+  const [events, setEvents] = useState(null);   // null = still loading
+  const [error, setError] = useState("");
 
-  async function run(label, fn) {
-    try {
-      const data = await fn();
-      setResult({ type: "success", text: `${label}: OK  ${JSON.stringify(data)}` });
-    } catch (err) {
-      setResult({ type: "error", text: `${label}: ${err.status} ${err.code || ""} - ${err.message}` });
-    }
-  }
+  // Reload the list whenever the search text or category changes.
+  // We wait 300 ms after the last key press so we don't call the server on every letter.
+  useEffect(() => {
+    let cancelled = false; // ignore an old reply if a newer search started
+    const timer = setTimeout(async () => {
+      try {
+        setError("");
+        const data = await listEvents({ q: q.trim(), category });
+        if (!cancelled) setEvents(data.events);
+      } catch (err) {
+        if (!cancelled) setError(err.message || "Could not load events.");
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [q, category]);
 
   return (
     <div>
-      <h1>Welcome, {dbUser.name}</h1>
+      <section className="hero">
+        <p className="hero-kicker">Hi {dbUser.name.split(" ")[0]}, going somewhere?</p>
+        <h1 className="hero-title">Never go to a show alone again.</h1>
+        <p className="hero-sub">
+          Find people heading to the same event, book together and save with group discounts.
+        </p>
+        <input
+          className="hero-search"
+          type="search"
+          placeholder="Search events, e.g. rock, comedy, Grand Arena"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          aria-label="Search events"
+        />
+      </section>
 
       {!dbUser.phone_verified && (
         <Notice type="info">
@@ -30,32 +59,42 @@ export default function HomePage() {
         </Notice>
       )}
 
-      <div className="card-row">
-        <div className="card">
-          <div className="muted small">Trust score</div>
-          <div className="big gold-text">{dbUser.trust_score}</div>
-        </div>
-        <div className="card">
-          <div className="muted small">Phone</div>
-          <div className="big">{dbUser.phone_verified ? "Verified" : "Not verified"}</div>
-        </div>
-        <div className="card">
-          <div className="muted small">Signed in as</div>
-          <div>{dbUser.email}</div>
-        </div>
+      <div className="chip-select category-chips">
+        <button
+          className={`chip-option ${category === "" ? "active" : ""}`}
+          onClick={() => setCategory("")}
+        >
+          All
+        </button>
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.value}
+            className={`chip-option ${category === c.value ? "active" : ""}`}
+            onClick={() => setCategory(c.value)}
+          >
+            {c.icon} {c.label}
+          </button>
+        ))}
       </div>
 
-      <h2>Checkpoint 1 tests</h2>
-      <p className="muted">The events list replaces this page in Checkpoint 2.</p>
-      <div className="btn-row">
-        <button className="btn btn-outline" onClick={() => run("/auth/me", getMe)}>
-          Call protected route
-        </button>
-        <button className="btn btn-outline" onClick={() => run("/auth/verified-only", callVerifiedOnly)}>
-          Call verified-only route
-        </button>
-      </div>
-      {result && <Notice type={result.type}>{result.text}</Notice>}
+      {error && <Notice type="error">{error}</Notice>}
+
+      {!error && events === null && <Loader />}
+
+      {events && events.length === 0 && (
+        <div className="empty-state">
+          <p className="big">No events found</p>
+          <p className="muted">Try a different word or pick another category.</p>
+        </div>
+      )}
+
+      {events && events.length > 0 && (
+        <div className="event-grid">
+          {events.map((ev) => (
+            <EventCard key={ev.id} event={ev} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

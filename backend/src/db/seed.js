@@ -39,8 +39,11 @@ async function seed() {
            (venue_id, name, description, category, start_time, end_time,
             base_price, discount_min_size, discount_percent)
          VALUES ($1, $2, $3, $4,
-                 now() + $5::interval,
-                 now() + $5::interval + interval '3 hours',
+                 -- start at 7 pm India time, N days from today; 3 hours long
+                 (date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata')
+                    + $5::interval + interval '19 hours') AT TIME ZONE 'Asia/Kolkata',
+                 (date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata')
+                    + $5::interval + interval '22 hours') AT TIME ZONE 'Asia/Kolkata',
                  $6, $7, $8)
          RETURNING id`,
         [venueId, name, desc, cat, startIn, price, minSize, pct]
