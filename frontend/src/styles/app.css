@@ -722,3 +722,46 @@ a.group-title:hover {
     display: none; /* very small phones: keep just the "Log out" link */
   }
 }
+
+/* ================= CP4: matchmaking ================= */
+.match-chip {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.shared-line {
+  margin-top: -4px;
+}
+.why-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.why-list li {
+  display: grid;
+  grid-template-columns: 1fr 90px 36px;
+  align-items: center;
+  gap: 10px;
+}
+.why-bar {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--card);
+  overflow: hidden;
+}
+.why-bar span {
+  display: block;
+  height: 100%;
+  background: var(--gold); /* solid, not gradient: gradient is only for primary bars */
+  border-radius: var(--radius-pill);
+}
+@media (max-width: 420px) {
+  .why-list li {
+    grid-template-columns: 1fr 60px 32px;
+  }
+}

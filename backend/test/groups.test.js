@@ -1,11 +1,11 @@
 // CP3 tests: create, list, join, full, leave, one-group-per-event, verified/blocked rules.
-// Needs the seed data (npm run db:seed). Cleans up its own "test-" users.
+// Uses its own private test events and "test-" users, and removes them afterwards.
 const test = require("node:test");
 const assert = require("node:assert");
 const h = require("./helpers");
 
-let eventId; // Rock Night Live
-let otherEventId; // Stand-up Special
+let eventId;      // a private test event
+let otherEventId; // a second private test event
 
 test.before(async () => {
   await h.start();
@@ -19,9 +19,8 @@ test.before(async () => {
     "UPDATE users SET trust_score = 0, blocked_until = now() + interval '5 minutes' WHERE id = $1",
     [blocked.id]
   );
-  const ev = await h.pool.query("SELECT id, name FROM events ORDER BY start_time");
-  eventId = ev.rows[0].id;
-  otherEventId = ev.rows[1].id;
+  eventId = (await h.makeEvent("Groups A")).id;      // private events: no real groups on them
+  otherEventId = (await h.makeEvent("Groups B")).id;
 });
 
 test.after(async () => {

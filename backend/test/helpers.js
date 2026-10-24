@@ -70,6 +70,29 @@ async function makeUser(uid, extra = {}) {
   return r.rows[0];
 }
 
+// Creates a private test event (name starts "TEST-") with its own seat grid,
+// so tests never depend on real groups/bookings that exist in your database.
+async function makeEvent(name = "Event", { startsIn = "3 days", rows = 5, perRow = 10, ...extra } = {}) {
+  const venue = (await pool.query("SELECT id FROM venues ORDER BY id LIMIT 1")).rows[0];
+  const e = {
+    base_price: 1000, discount_min_size: 3, discount_percent: 10, category: "concert", ...extra,
+  };
+  const r = await pool.query(
+    `INSERT INTO events (venue_id, name, description, category, start_time, end_time,
+                         base_price, discount_min_size, discount_percent)
+     VALUES ($1, $2, 'test event', $3, now() + $4::interval, now() + $4::interval + interval '3 hours',
+             $5, $6, $7) RETURNING *`,
+    [venue.id, `TEST-${name}`, e.category, startsIn, e.base_price, e.discount_min_size, e.discount_percent]
+  );
+  const event = r.rows[0];
+  await pool.query(
+    `INSERT INTO seats (event_id, row_label, seat_no)
+     SELECT $1, chr(64 + r), n FROM generate_series(1, $2) r, generate_series(1, $3) n`,
+    [event.id, rows, perRow]
+  );
+  return event;
+}
+
 // Removes everything test users created, in an order the foreign keys allow.
 async function cleanTestData() {
   const ids = `(SELECT id FROM users WHERE firebase_uid LIKE 'test-%')`;
@@ -87,6 +110,7 @@ async function cleanTestData() {
   await pool.query(`DELETE FROM group_members WHERE user_id IN ${ids}`);
   await pool.query(`DELETE FROM messages WHERE user_id IN ${ids}`);
   await pool.query(`DELETE FROM users WHERE firebase_uid LIKE 'test-%'`);
+  await pool.query(`DELETE FROM events WHERE name LIKE 'TEST-%'`); // seats go with them
 }
 
-module.exports = { start, stop, call, makeUser, cleanTestData, pool };
+module.exports = { start, stop, call, makeUser, makeEvent, cleanTestData, pool };

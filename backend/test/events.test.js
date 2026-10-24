@@ -1,14 +1,22 @@
 // CP2 tests: events list, search, category filter, details.
-// Needs the seed data (npm run db:seed) in the database.
+// Needs the 4 seeded events (npm run db:seed). Details are checked on a private
+// test event, so real groups or bookings in your database can't break the tests.
 const test = require("node:test");
 const assert = require("node:assert");
 const h = require("./helpers");
 
-test.before(h.start);
-test.after(h.stop);
+test.before(async () => {
+  await h.start();
+  await h.cleanTestData(); // removes leftovers from any earlier crashed test run
+});
+test.after(async () => {
+  await h.cleanTestData();
+  await h.stop();
+});
 
 test("list returns the 4 seeded events, soonest first", async () => {
   const r = await h.call("GET", "/events");
+  r.data.events = r.data.events.filter((e) => !e.name.startsWith("TEST-"));
   assert.strictEqual(r.status, 200);
   assert.strictEqual(r.data.events.length, 4);
   assert.strictEqual(r.data.events[0].name, "Rock Night Live");
@@ -47,16 +55,18 @@ test("search text cannot break the SQL", async () => {
 });
 
 test("details include times, price, discount terms and seats left", async () => {
-  const list = await h.call("GET", "/events?q=rock");
-  const id = list.data.events[0].id;
-  const r = await h.call("GET", `/events/${id}`);
+  const ev = await h.makeEvent("Details", {
+    base_price: 1500, discount_min_size: 3, discount_percent: 15, rows: 2, perRow: 5,
+  });
+  const r = await h.call("GET", `/events/${ev.id}`);
   assert.strictEqual(r.status, 200);
   const e = r.data.event;
   assert.ok(e.start_time && e.end_time);
   assert.strictEqual(Number(e.base_price), 1500);
   assert.strictEqual(e.discount_min_size, 3);
   assert.strictEqual(e.discount_percent, 15);
-  assert.strictEqual(e.seats_left, 50);
+  assert.strictEqual(e.seats_left, 10);
+  assert.strictEqual(e.open_groups, 0);
 });
 
 test("unknown or bad id gives a clean error", async () => {

@@ -6,6 +6,7 @@
 //  - if the last member leaves, the group is deleted
 const pool = require("../db/pool");
 const { MAX_GROUP } = require("../config/constants");
+const { rankGroups } = require("../services/matchmakingClient");
 
 const MIN_SIZE = 2;
 
@@ -83,7 +84,8 @@ async function loadGroup(db, groupId) {
 
 // ---------------------------------------------------------------------------
 
-// GET /events/:id/groups  -> open groups for an event (not ranked yet; CP4 ranks them)
+// GET /events/:id/groups  -> open groups for an event, ranked for this user by the
+// Python matchmaking service. If Python is down, the same groups come back unranked.
 async function listForEvent(req, res) {
   const eventId = parseId(req.params.id);
   if (!eventId) return fail(res, 400, "bad_id", "Invalid event id.");
@@ -98,9 +100,33 @@ async function listForEvent(req, res) {
       ORDER BY g.created_at DESC`,
     [eventId]
   );
-  const groups = r.rows.map((g) => decorate(g, req.user.id));
+  const all = r.rows.map((g) => decorate(g, req.user.id));
   const myGroupId = await myGroupForEvent(pool, req.user.id, eventId);
-  res.json({ groups, my_group_id: myGroupId });
+
+  // Rank only the groups this user could actually join (CP4).
+  const mine = all.filter((g) => g.is_member);
+  const joinable = all.filter((g) => !g.is_member && !g.is_full);
+  const full = all.filter((g) => !g.is_member && g.is_full);
+
+  const scores = await rankGroups(req.user, joinable);
+  let ordered = joinable;
+  if (scores) {
+    ordered = joinable
+      .map((g) => {
+        const s = scores.get(g.id);
+        return s
+          ? { ...g, match_score: s.score, match_breakdown: s.breakdown, shared_interests: s.shared_interests }
+          : g;
+      })
+      .sort((a, b) => (b.match_score ?? -1) - (a.match_score ?? -1));
+  }
+
+  // Order on screen: my group first, then best matches, then full groups.
+  res.json({
+    groups: [...mine, ...ordered, ...full],
+    my_group_id: myGroupId,
+    ranked: scores !== null,
+  });
 }
 
 // POST /events/:id/groups   body: { max_size: 2..5 }

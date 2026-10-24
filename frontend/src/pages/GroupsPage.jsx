@@ -19,6 +19,7 @@ export default function GroupsPage() {
   const [event, setEvent] = useState(null);
   const [groups, setGroups] = useState(null);
   const [myGroupId, setMyGroupId] = useState(null);
+  const [ranked, setRanked] = useState(true);
   const [size, setSize] = useState(4);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -29,6 +30,7 @@ export default function GroupsPage() {
       setEvent(ev.event);
       setGroups(gr.groups);
       setMyGroupId(gr.my_group_id);
+      setRanked(gr.ranked);
     } catch (err) {
       setError(err.message || "Could not load groups.");
     }
@@ -89,8 +91,8 @@ export default function GroupsPage() {
           <div className="event-date">{formatDateTime(event.start_time)}</div>
           <h1>Groups for {event.name}</h1>
           <p className="muted small">
-            Groups of {event.discount_min_size}+ get {event.discount_percent}% off. Pick a group
-            that fits you, or start your own.
+            Groups of {event.discount_min_size}+ get {event.discount_percent}% off. Groups are
+            sorted by how well they match you, or start your own.
           </p>
         </div>
       </div>
@@ -140,6 +142,11 @@ export default function GroupsPage() {
         </aside>
 
         <section>
+          {!ranked && groups.length > 0 && (
+            <Notice type="info">
+              Matching is offline right now, so groups are shown newest first instead of best match.
+            </Notice>
+          )}
           {groups.length === 0 ? (
             <div className="card empty-state">
               <p className="big">No groups yet</p>
