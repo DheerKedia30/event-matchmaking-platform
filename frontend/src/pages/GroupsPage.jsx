@@ -1,6 +1,6 @@
 // "Find a group" for one event: the list of open groups plus a "Create group" box.
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getEvent } from "../api/eventsApi";
 import { listGroupsForEvent, createGroup, joinGroup } from "../api/groupsApi";
@@ -14,7 +14,15 @@ const SIZES = [2, 3, 4, 5];
 export default function GroupsPage() {
   const { id } = useParams(); // event id from the URL
   const navigate = useNavigate();
-  const { dbUser } = useAuth();
+  const { dbUser, refreshUser } = useAuth();
+  const location = useLocation();
+  // A message passed here after leaving a group. Kept in local state and then
+  // removed from the browser history, so it doesn't come back on refresh.
+  const [flash] = useState(location.state || null);
+  useEffect(() => {
+    if (location.state) navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [event, setEvent] = useState(null);
   const [groups, setGroups] = useState(null);
@@ -38,6 +46,8 @@ export default function GroupsPage() {
 
   useEffect(() => {
     load();
+    refreshUser(); // pick up a new trust score / a block that just ended
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load]);
 
   // Why this user can't create/join right now (or "" if they can)
@@ -96,6 +106,10 @@ export default function GroupsPage() {
           </p>
         </div>
       </div>
+
+      {flash && blockReason !== "blocked" && (
+        <Notice type={flash.penalty ? "error" : "success"}>{flash.flash}</Notice>
+      )}
 
       {blockReason === "verify" && (
         <Notice type="info">

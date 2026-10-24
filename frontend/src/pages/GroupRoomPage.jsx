@@ -1,27 +1,30 @@
 // The group room: header with status and fill bar, members on the left,
-// action buttons, and the chat panel on the right (chat itself arrives in CP6).
+// action buttons (Lock in, Leave), and the chat panel on the right (chat arrives in CP6).
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getGroup, joinGroup, leaveGroup } from "../api/groupsApi";
+import { getGroup, joinGroup, leaveGroup, lockIn } from "../api/groupsApi";
+import { LOCKED_LEAVE_PENALTY, BLOCK_DURATION_MIN } from "../constants";
 import { formatDateTime, genderSummary } from "../utils/format";
 import FillBar from "../components/groups/FillBar";
 import MemberList from "../components/groups/MemberList";
 import Loader from "../components/shared/Loader";
 import Notice from "../components/shared/Notice";
+import ConfirmModal from "../components/shared/ConfirmModal";
 
 const STATUS_LABEL = { open: "Open", sealed: "Booking in progress", booked: "Booked" };
 
 export default function GroupRoomPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { dbUser } = useAuth();
+  const { dbUser, refreshUser } = useAuth();
 
   const [group, setGroup] = useState(null);
   const [event, setEvent] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notFound, setNotFound] = useState(false);
+  const [modal, setModal] = useState(null); // null | "lock" | "leave"
 
   const load = useCallback(async () => {
     try {
@@ -54,9 +57,28 @@ export default function GroupRoomPage() {
     }
   }
 
-  function handleLeave() {
-    if (!window.confirm("Leave this group?")) return;
-    run(() => leaveGroup(group.id), () => navigate(`/events/${event.id}/groups`));
+  async function confirmLockIn() {
+    await run(() => lockIn(group.id));
+    setModal(null);
+  }
+
+  async function confirmLeave() {
+    const locked = group.members.find((m) => m.id === dbUser.id)?.is_locked_in;
+    await run(
+      async () => {
+        const res = await leaveGroup(group.id, locked);
+        await refreshUser(); // trust score in the navbar/profile changes
+        let flash = "You left the group.";
+        if (res.blocked_until) {
+          flash = `You left the group. Your trust score hit 0, so you can't create or join groups for ${BLOCK_DURATION_MIN} minutes.`;
+        } else if (res.penalty) {
+          flash = `You left the group and lost ${res.penalty} trust points. Your trust score is now ${res.trust_score}.`;
+        }
+        navigate(`/events/${event.id}/groups`, { state: { flash, penalty: res.penalty > 0 } });
+      },
+      () => {}
+    );
+    setModal(null);
   }
 
   if (notFound) {
@@ -70,6 +92,9 @@ export default function GroupRoomPage() {
   if (!group) return error ? <Notice type="error">{error}</Notice> : <Loader />;
 
   const statusText = group.status === "open" && group.is_full ? "Full" : STATUS_LABEL[group.status];
+  const me = group.members.find((m) => m.id === dbUser.id);
+  const lockedCount = group.members.filter((m) => m.is_locked_in).length;
+  const trustAfter = Math.max(0, dbUser.trust_score - LOCKED_LEAVE_PENALTY);
 
   return (
     <div>
@@ -96,12 +121,31 @@ export default function GroupRoomPage() {
           <h3>Members</h3>
           <MemberList members={group.members} creatorId={group.creator_id} meId={dbUser.id} />
 
+          {group.is_member && (
+            <p className="small muted lock-count">
+              {lockedCount} of {group.member_count} locked in
+            </p>
+          )}
+
           <div className="btn-row">
             {group.is_member ? (
               group.status === "open" && (
-                <button className="btn btn-danger-outline" disabled={busy} onClick={handleLeave}>
-                  Leave
-                </button>
+                <>
+                  {me?.is_locked_in ? (
+                    <span className="chip chip-green locked-badge">✓ You're locked in</span>
+                  ) : (
+                    <button className="btn btn-gold" disabled={busy} onClick={() => setModal("lock")}>
+                      Lock in
+                    </button>
+                  )}
+                  <button
+                    className="btn btn-danger-outline"
+                    disabled={busy}
+                    onClick={() => setModal("leave")}
+                  >
+                    Leave
+                  </button>
+                </>
               )
             ) : (
               group.status === "open" && !group.is_full && (
@@ -115,6 +159,58 @@ export default function GroupRoomPage() {
             <p className="small muted">You're viewing this group. Join it to chat and book together.</p>
           )}
         </section>
+
+        {modal === "lock" && (
+          <ConfirmModal
+            title="Lock in to this group?"
+            confirmLabel="Yes, lock me in"
+            busy={busy}
+            onConfirm={confirmLockIn}
+            onCancel={() => setModal(null)}
+          >
+            <p>
+              Locking in tells the group you're definitely going. <strong>It can't be undone.</strong>
+            </p>
+            <p className="muted small">
+              If you leave after locking in, your trust score drops by {LOCKED_LEAVE_PENALTY}.
+            </p>
+          </ConfirmModal>
+        )}
+
+        {modal === "leave" && (
+          me?.is_locked_in ? (
+            <ConfirmModal
+              title="Leave after locking in?"
+              confirmLabel={`Leave and lose ${LOCKED_LEAVE_PENALTY} points`}
+              danger
+              busy={busy}
+              onConfirm={confirmLeave}
+              onCancel={() => setModal(null)}
+            >
+              <p>
+                You locked in, so leaving now drops your trust score by{" "}
+                <strong className="red-text">{LOCKED_LEAVE_PENALTY}</strong>:{" "}
+                {dbUser.trust_score} → <strong className="red-text">{trustAfter}</strong>.
+              </p>
+              {trustAfter === 0 && (
+                <Notice type="error">
+                  Your score would hit 0, so you'd be blocked from creating or joining groups for{" "}
+                  {BLOCK_DURATION_MIN} minutes. After that it resets to 10.
+                </Notice>
+              )}
+            </ConfirmModal>
+          ) : (
+            <ConfirmModal
+              title="Leave this group?"
+              confirmLabel="Leave"
+              busy={busy}
+              onConfirm={confirmLeave}
+              onCancel={() => setModal(null)}
+            >
+              <p>You haven't locked in, so leaving won't affect your trust score.</p>
+            </ConfirmModal>
+          )
+        )}
 
         <section className="card chat-panel">
           <h3>Group chat</h3>

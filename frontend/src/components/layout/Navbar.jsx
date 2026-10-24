@@ -32,7 +32,13 @@ export default function Navbar() {
       <div className="nav-right">
         {dbUser ? (
           <>
-            <span className="chip gold">Trust {dbUser.trust_score}</span>
+            <span
+              className={`chip ${
+                dbUser.blocked_until && new Date(dbUser.blocked_until) > new Date() ? "chip-red" : "gold"
+              }`}
+            >
+              Trust {dbUser.trust_score}
+            </span>
             <span className="avatar">{initials}</span>
             <button className="link-btn" onClick={handleLogout}>Log out</button>
           </>

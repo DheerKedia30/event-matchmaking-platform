@@ -4,9 +4,11 @@
 //  - a user can be in only ONE group per event
 //  - nobody can join a full group, and nobody can join/leave once booking started
 //  - if the last member leaves, the group is deleted
+//  - "lock in" is one-way; leaving after locking in costs trust points (CP5)
 const pool = require("../db/pool");
-const { MAX_GROUP } = require("../config/constants");
+const { MAX_GROUP, LOCKED_LEAVE_PENALTY } = require("../config/constants");
 const { rankGroups } = require("../services/matchmakingClient");
+const { applyPenalty } = require("../services/trustService");
 
 const MIN_SIZE = 2;
 
@@ -249,8 +251,39 @@ async function joinGroup(req, res) {
   }
 }
 
-// POST /groups/:id/leave
-// (CP5 adds the trust penalty for leaving after locking in.)
+// POST /groups/:id/lock-in   -> "I'm committed to going." One-way: it can't be undone.
+async function lockIn(req, res) {
+  const groupId = parseId(req.params.id);
+  if (!groupId) return fail(res, 400, "bad_id", "Invalid group id.");
+
+  const g = await pool.query("SELECT status FROM groups WHERE id = $1", [groupId]);
+  if (!g.rows[0]) return fail(res, 404, "group_not_found", "Group not found.");
+  if (g.rows[0].status !== "open") {
+    return fail(res, 409, "group_sealed", "Booking has already started for this group.");
+  }
+
+  const r = await pool.query(
+    `UPDATE group_members SET is_locked_in = TRUE
+      WHERE group_id = $1 AND user_id = $2 AND is_locked_in = FALSE
+      RETURNING user_id`,
+    [groupId, req.user.id]
+  );
+  if (!r.rows[0]) {
+    const m = await pool.query(
+      "SELECT is_locked_in FROM group_members WHERE group_id = $1 AND user_id = $2",
+      [groupId, req.user.id]
+    );
+    if (!m.rows[0]) return fail(res, 409, "not_member", "You are not in this group.");
+    return fail(res, 409, "already_locked_in", "You are already locked in.");
+  }
+
+  const fresh = await loadGroup(pool, groupId);
+  res.json({ group: decorate(fresh, req.user.id) });
+}
+
+// POST /groups/:id/leave     body (only needed after locking in): { confirm: true }
+// Leaving after locking in costs LOCKED_LEAVE_PENALTY trust points, so the
+// frontend must show a warning first and send confirm: true.
 async function leaveGroup(req, res) {
   const groupId = parseId(req.params.id);
   if (!groupId) return fail(res, 400, "bad_id", "Invalid group id.");
@@ -276,9 +309,21 @@ async function leaveGroup(req, res) {
       return fail(res, 409, "group_sealed", "Booking has started, so you can't leave now.");
     }
 
+    const wasLockedIn = mem.rows[0].is_locked_in;
+    if (wasLockedIn && req.body?.confirm !== true) {
+      await db.query("ROLLBACK");
+      return fail(
+        res, 409, "confirm_required",
+        `You locked in, so leaving costs ${LOCKED_LEAVE_PENALTY} trust points. Confirm to leave.`
+      );
+    }
+
     await db.query("DELETE FROM group_members WHERE group_id = $1 AND user_id = $2", [
       groupId, req.user.id,
     ]);
+    const trust = wasLockedIn
+      ? await applyPenalty(db, req.user.id, LOCKED_LEAVE_PENALTY, "left a group after locking in")
+      : null;
     const left = await db.query(
       "SELECT COUNT(*)::int AS n FROM group_members WHERE group_id = $1", [groupId]
     );
@@ -288,7 +333,13 @@ async function leaveGroup(req, res) {
       await db.query("DELETE FROM groups WHERE id = $1", [groupId]);
     }
     await db.query("COMMIT");
-    res.json({ left: true, group_deleted: deleted });
+    res.json({
+      left: true,
+      group_deleted: deleted,
+      penalty: trust ? trust.penalty : 0,
+      trust_score: trust ? trust.trust_score : req.user.trust_score,
+      blocked_until: trust ? trust.blocked_until : req.user.blocked_until,
+    });
   } catch (err) {
     await db.query("ROLLBACK");
     throw err;
@@ -312,4 +363,6 @@ async function myGroups(req, res) {
   res.json({ groups: r.rows.map((g) => decorate(g, req.user.id)) });
 }
 
-module.exports = { listForEvent, createGroup, getGroup, joinGroup, leaveGroup, myGroups };
+module.exports = {
+  listForEvent, createGroup, getGroup, joinGroup, leaveGroup, lockIn, myGroups,
+};

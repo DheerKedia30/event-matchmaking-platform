@@ -765,3 +765,72 @@ a.group-title:hover {
     grid-template-columns: 1fr 60px 32px;
   }
 }
+
+/* ================= CP5: lock-in, trust, block ================= */
+.red-text {
+  color: var(--red);
+}
+.green-text {
+  color: var(--green);
+}
+.chip-red {
+  color: var(--red);
+  border-color: rgba(255, 84, 112, 0.5);
+}
+.btn-gold {
+  background: var(--gold); /* solid gold: "Lock in" from the mockup */
+}
+.btn-danger {
+  background: var(--red);
+  color: #1a1420;
+}
+.btn-danger:hover {
+  box-shadow: 0 0 18px rgba(255, 84, 112, 0.45);
+}
+.locked-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  font-size: 13px;
+  border-radius: var(--radius-pill);
+}
+.lock-count {
+  margin: 12px 0 0;
+}
+.profile-stats .big {
+  font-size: 24px;
+}
+
+/* ---------- pop-up (modal) ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(5, 3, 8, 0.72);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.modal {
+  width: 100%;
+  max-width: 440px;
+  padding: 22px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.modal-body p {
+  margin: 8px 0;
+}
+.modal-actions {
+  justify-content: flex-end;
+  margin-bottom: 0;
+}
+.profile-stats {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 520px) {
+  .profile-stats {
+    grid-template-columns: 1fr;
+  }
+}

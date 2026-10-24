@@ -23,6 +23,7 @@ require.cache[firebasePath] = { id: firebasePath, filename: firebasePath, loaded
 
 const app = require("../src/app");
 const pool = require("../src/db/pool");
+const { cleanTestData } = require("./cleanup");
 
 let server, base;
 const UID = "test-user-1";
@@ -42,13 +43,13 @@ async function call(method, url, { headers = {}, body } = {}) {
 }
 
 test.before(async () => {
-  await pool.query("DELETE FROM users WHERE firebase_uid LIKE 'test-%'");
+  await cleanTestData();
   server = app.listen(0);
   base = `http://localhost:${server.address().port}`;
 });
 
 test.after(async () => {
-  await pool.query("DELETE FROM users WHERE firebase_uid LIKE 'test-%'");
+  await cleanTestData();
   server.close();
   await pool.end();
 });

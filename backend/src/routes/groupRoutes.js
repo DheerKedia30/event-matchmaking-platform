@@ -10,6 +10,7 @@ const router = express.Router();
 router.get("/mine", requireAuth, asyncHandler(ctrl.myGroups));          // must be above "/:id"
 router.get("/:id", requireAuth, asyncHandler(ctrl.getGroup));
 router.post("/:id/join", requireCanGroup, asyncHandler(ctrl.joinGroup));
+router.post("/:id/lock-in", requireAuth, asyncHandler(ctrl.lockIn));    // one-way commitment
 router.post("/:id/leave", requireAuth, asyncHandler(ctrl.leaveGroup));  // leaving is always allowed
 
 module.exports = router;

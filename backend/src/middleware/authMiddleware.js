@@ -2,6 +2,7 @@
 const pool = require("../db/pool");
 const firebase = require("../config/firebase");
 const { asyncHandler } = require("./errorHandler");
+const { liftExpiredBlock } = require("../services/trustService");
 
 // 1) Is there a valid Firebase login token on the request?
 //    The frontend sends:  Authorization: Bearer <token>
@@ -36,7 +37,8 @@ const loadUser = asyncHandler(async (req, res, next) => {
       message: "Finish creating your profile first.",
     });
   }
-  req.user = result.rows[0];
+  // If this user's block has run out, lift it now (trust resets to 10).
+  req.user = await liftExpiredBlock(pool, result.rows[0]);
   next();
 });
 
