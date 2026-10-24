@@ -47,6 +47,7 @@ body::before {
 .nav-links a {
   color: var(--muted);
   font-size: 14px;
+  white-space: nowrap;
 }
 .nav-links a.active {
   color: var(--text);
@@ -302,6 +303,13 @@ body::before {
   .nav-right .chip {
     display: none; /* trust score is on the profile page; no room on phones */
   }
+  .logo {
+    font-size: 18px;
+  }
+  .nav-links {
+    gap: 10px;
+    font-size: 13px;
+  }
 }
 
 /* ================= CP2: home page and events ================= */
@@ -522,5 +530,195 @@ body::before {
   }
   .hero {
     padding: 28px 18px;
+  }
+}
+
+/* ================= CP3: groups ================= */
+
+/* small chips and avatars */
+.chip.tiny {
+  font-size: 11px;
+  padding: 1px 8px;
+  margin-left: 6px;
+}
+.chip-green {
+  color: var(--green);
+  border-color: rgba(61, 220, 151, 0.5);
+}
+.avatar-sm {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+.avatar-stack {
+  display: flex;
+}
+.avatar-stack .avatar + .avatar {
+  margin-left: -8px;
+}
+
+/* status chips: gold = open, amber = booking (seats held), green = booked */
+.status-chip {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status-open {
+  color: var(--gold);
+  border-color: rgba(246, 196, 83, 0.5);
+}
+.status-sealed {
+  color: var(--coral);
+  border-color: rgba(255, 122, 89, 0.5);
+}
+.status-booked {
+  color: var(--green);
+  border-color: rgba(61, 220, 151, 0.5);
+}
+
+/* the group fill bar (gradient is allowed here) */
+.fill-bar {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  overflow: hidden;
+}
+.fill-bar-inner {
+  height: 100%;
+  background: var(--gradient);
+  border-radius: var(--radius-pill);
+  transition: width 0.3s;
+}
+
+/* red outline button for "Leave" */
+.btn-danger-outline {
+  background: transparent;
+  color: var(--red);
+  border: 0.5px solid var(--red);
+}
+.btn-danger-outline:hover {
+  box-shadow: 0 0 14px rgba(255, 84, 112, 0.35);
+}
+
+/* ---------- groups for an event ---------- */
+.groups-header {
+  margin-bottom: 8px;
+}
+.groups-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  align-items: start;
+  margin-top: 12px;
+}
+.create-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 80px;
+}
+.create-box p {
+  margin: 0;
+}
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.group-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.group-card-top,
+.group-card-bottom,
+.room-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.group-card-bottom {
+  align-items: center;
+}
+.group-title {
+  font-family: var(--font-heading);
+  font-size: 19px;
+  color: var(--text);
+}
+a.group-title:hover {
+  color: var(--gold);
+}
+.my-group-card {
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+.my-group-card:hover {
+  border-color: var(--gold);
+}
+.empty-state .btn {
+  margin-top: 8px;
+}
+
+/* ---------- group room ---------- */
+.room-header {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.room-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+  margin-top: 4px;
+}
+.member-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.member {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.member .avatar {
+  flex-shrink: 0;
+}
+.member-name {
+  font-weight: 600;
+}
+.member-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.member-tags .chip.tiny {
+  margin-left: 0;
+}
+.chat-panel {
+  min-height: 320px;
+}
+
+@media (max-width: 760px) {
+  .groups-layout,
+  .room-layout {
+    grid-template-columns: 1fr;
+  }
+  .create-box {
+    position: static;
+  }
+}
+
+@media (max-width: 420px) {
+  .nav-right .avatar {
+    display: none; /* very small phones: keep just the "Log out" link */
   }
 }

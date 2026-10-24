@@ -23,6 +23,7 @@ export default function Navbar() {
         {dbUser && (
           <>
             <NavLink to="/" end>Home</NavLink>
+            <NavLink to="/my-groups">My groups</NavLink>
             <NavLink to="/profile">Profile</NavLink>
           </>
         )}

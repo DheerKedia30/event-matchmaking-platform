@@ -51,7 +51,27 @@ function requireVerified(req, res, next) {
   next();
 }
 
+// 4) Is the user currently blocked (trust score hit 0)? Blocked users can
+//    browse, but cannot create or join groups until blocked_until passes.
+function requireNotBlocked(req, res, next) {
+  const until = req.user.blocked_until;
+  if (until && new Date(until) > new Date()) {
+    return res.status(403).json({
+      error: "blocked",
+      message: `Your trust score hit 0, so you can't join or create groups until ${new Date(
+        until
+      ).toLocaleString("en-IN")}.`,
+    });
+  }
+  next();
+}
+
 // "Logged in AND has a profile" = run both gatekeepers in order
 const requireAuth = [verifyToken, loadUser];
 
-module.exports = { verifyToken, loadUser, requireVerified, requireAuth };
+// Everything needed before creating or joining a group
+const requireCanGroup = [...requireAuth, requireVerified, requireNotBlocked];
+
+module.exports = {
+  verifyToken, loadUser, requireVerified, requireNotBlocked, requireAuth, requireCanGroup,
+};

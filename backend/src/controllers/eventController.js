@@ -4,13 +4,15 @@ const pool = require("../db/pool");
 const CATEGORIES = ["concert", "comedy", "theatre"];
 
 // The columns we send to the frontend for every event.
-// "open_groups" counts groups that are still accepting members.
+// "open_groups" counts groups that are open AND still have a free spot.
 const EVENT_FIELDS = `
   e.id, e.name, e.description, e.category, e.start_time, e.end_time,
   e.base_price, e.discount_min_size, e.discount_percent, e.status,
   v.name AS venue_name, v.city AS venue_city, v.address AS venue_address,
   (SELECT COUNT(*)::int FROM groups g
-     WHERE g.event_id = e.id AND g.status = 'open') AS open_groups,
+     WHERE g.event_id = e.id AND g.status = 'open'
+       AND (SELECT COUNT(*) FROM group_members gm WHERE gm.group_id = g.id) < g.max_size
+  ) AS open_groups,
   (e.end_time < now()) AS has_ended
 `;
 
