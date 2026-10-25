@@ -9,6 +9,7 @@ const pool = require("../db/pool");
 const { MAX_GROUP, LOCKED_LEAVE_PENALTY } = require("../config/constants");
 const { rankGroups } = require("../services/matchmakingClient");
 const { applyPenalty } = require("../services/trustService");
+const { emitGroupChanged, removeFromChat } = require("../sockets/chatSocket");
 
 const MIN_SIZE = 2;
 
@@ -169,6 +170,7 @@ async function createGroup(req, res) {
     await db.query("COMMIT");
 
     const group = await loadGroup(pool, groupId);
+    emitGroupChanged(groupId, eventId); // live update for anyone on the groups list
     res.status(201).json({ group: decorate(group, req.user.id) });
   } catch (err) {
     await db.query("ROLLBACK");
@@ -242,6 +244,7 @@ async function joinGroup(req, res) {
     await db.query("COMMIT");
 
     const fresh = await loadGroup(pool, groupId);
+    emitGroupChanged(groupId, group.event_id); // everyone in the room sees the new member
     res.json({ group: decorate(fresh, req.user.id) });
   } catch (err) {
     await db.query("ROLLBACK");
@@ -278,6 +281,7 @@ async function lockIn(req, res) {
   }
 
   const fresh = await loadGroup(pool, groupId);
+  emitGroupChanged(groupId, fresh.event_id);
   res.json({ group: decorate(fresh, req.user.id) });
 }
 
@@ -333,6 +337,8 @@ async function leaveGroup(req, res) {
       await db.query("DELETE FROM groups WHERE id = $1", [groupId]);
     }
     await db.query("COMMIT");
+    removeFromChat(req.user.id, groupId);      // stop sending them this group's chat
+    emitGroupChanged(groupId, group.event_id); // everyone else sees them leave
     res.json({
       left: true,
       group_deleted: deleted,
@@ -346,6 +352,28 @@ async function leaveGroup(req, res) {
   } finally {
     db.release();
   }
+}
+
+// GET /groups/:id/messages  -> chat history (last 100 messages), members only
+async function listMessages(req, res) {
+  const groupId = parseId(req.params.id);
+  if (!groupId) return fail(res, 400, "bad_id", "Invalid group id.");
+  const m = await pool.query(
+    "SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2", [groupId, req.user.id]
+  );
+  if (!m.rows[0]) return fail(res, 403, "not_member", "Only group members can read the chat.");
+
+  const r = await pool.query(
+    `SELECT * FROM (
+       SELECT m.id, m.group_id, m.user_id, m.text, m.created_at, u.name AS user_name
+         FROM messages m JOIN users u ON u.id = m.user_id
+        WHERE m.group_id = $1
+        ORDER BY m.created_at DESC, m.id DESC
+        LIMIT 100) last
+     ORDER BY created_at, id`,
+    [groupId]
+  );
+  res.json({ messages: r.rows });
 }
 
 // GET /groups/mine  -> every group I'm in, with its event (for the "My groups" page)
@@ -364,5 +392,5 @@ async function myGroups(req, res) {
 }
 
 module.exports = {
-  listForEvent, createGroup, getGroup, joinGroup, leaveGroup, lockIn, myGroups,
+  listForEvent, createGroup, getGroup, joinGroup, leaveGroup, lockIn, myGroups, listMessages,
 };

@@ -6,6 +6,7 @@ import { getEvent } from "../api/eventsApi";
 import { listGroupsForEvent, createGroup, joinGroup } from "../api/groupsApi";
 import { formatDateTime } from "../utils/format";
 import GroupCard from "../components/groups/GroupCard";
+import { useEventGroupsLive } from "../hooks";
 import Loader from "../components/shared/Loader";
 import Notice from "../components/shared/Notice";
 
@@ -49,6 +50,9 @@ export default function GroupsPage() {
     refreshUser(); // pick up a new trust score / a block that just ended
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load]);
+
+  // Live: refresh the list when anyone creates, joins or leaves a group for this event
+  useEventGroupsLive(id, load);
 
   // Why this user can't create/join right now (or "" if they can)
   const blocked = dbUser.blocked_until && new Date(dbUser.blocked_until) > new Date();

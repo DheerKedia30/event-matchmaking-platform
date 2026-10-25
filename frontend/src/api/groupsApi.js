@@ -11,3 +11,4 @@ export const leaveGroup = (groupId, confirm = false) =>
   apiFetch(`/groups/${groupId}/leave`, { method: "POST", body: { confirm } });
 export const lockIn = (groupId) => apiFetch(`/groups/${groupId}/lock-in`, { method: "POST" });
 export const myGroups = () => apiFetch("/groups/mine");
+export const getMessages = (groupId) => apiFetch(`/groups/${groupId}/messages`);

@@ -1,5 +1,6 @@
 // The group room: header with status and fill bar, members on the left,
-// action buttons (Lock in, Leave), and the chat panel on the right (chat arrives in CP6).
+// action buttons (Lock in, Leave), and the live chat on the right.
+// The page updates by itself when members join, leave or lock in (Socket.IO).
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -11,6 +12,8 @@ import MemberList from "../components/groups/MemberList";
 import Loader from "../components/shared/Loader";
 import Notice from "../components/shared/Notice";
 import ConfirmModal from "../components/shared/ConfirmModal";
+import ChatPanel from "../components/chat/ChatPanel";
+import { useGroupLive } from "../hooks";
 
 const STATUS_LABEL = { open: "Open", sealed: "Booking in progress", booked: "Booked" };
 
@@ -40,6 +43,9 @@ export default function GroupRoomPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Live: reload whenever someone joins, leaves or locks in (no refresh needed)
+  useGroupLive(id, load);
 
   // Runs a button's request, then reloads the group so the screen is up to date.
   async function run(fn, after) {
@@ -213,11 +219,13 @@ export default function GroupRoomPage() {
         )}
 
         <section className="card chat-panel">
-          <h3>Group chat</h3>
           {group.is_member ? (
-            <p className="muted small">Chat will appear here.</p>
+            <ChatPanel groupId={group.id} meId={dbUser.id} closed={event.has_ended} />
           ) : (
-            <p className="muted small">Only members can see the chat.</p>
+            <>
+              <h3>Group chat</h3>
+              <p className="muted small">Only members can see the chat. Join to say hi.</p>
+            </>
           )}
         </section>
       </div>

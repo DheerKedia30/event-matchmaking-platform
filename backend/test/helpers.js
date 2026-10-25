@@ -20,22 +20,30 @@ require.cache[firebasePath] = {
   id: firebasePath, filename: firebasePath, loaded: true, exports: fakeFirebase,
 };
 
+const http = require("http");
 const app = require("../src/app");
+const { attachSockets } = require("../src/sockets/chatSocket");
 const pool = require("../src/db/pool");
 const { cleanTestData } = require("./cleanup");
 
 let server;
+let io;
 let base;
 
 async function start() {
-  server = app.listen(0);
+  // Same setup as server.js: API + live chat on one server (random free port)
+  server = http.createServer(app);
+  io = attachSockets(server);
+  await new Promise((resolve) => server.listen(0, resolve));
   base = `http://localhost:${server.address().port}`;
 }
 
 async function stop() {
-  server.close();
+  io.close(); // also closes the HTTP server
   await pool.end();
 }
+
+const url = () => base;
 
 // call("GET", "/events", { as: "test-a" })  -> { status, data }
 async function call(method, url, { as, body } = {}) {
@@ -94,4 +102,4 @@ async function makeEvent(name = "Event", { startsIn = "3 days", rows = 5, perRow
   return event;
 }
 
-module.exports = { start, stop, call, makeUser, makeEvent, cleanTestData, pool };
+module.exports = { start, stop, call, url, makeUser, makeEvent, cleanTestData, pool };
