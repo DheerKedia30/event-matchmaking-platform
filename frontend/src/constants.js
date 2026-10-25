@@ -11,6 +11,8 @@ export const MAX_AGE = 100;
 export const LOCKED_LEAVE_PENALTY = 10;
 export const BLOCK_DURATION_MIN = 5;
 export const TRUST_AFTER_BLOCK = 10;
+export const MIN_GROUP_TO_BOOK = 2;
+export const PAYMENT_WINDOW_MIN = 10;
 
 // Event categories: the value the backend uses, the label we show, and an icon.
 export const CATEGORIES = [

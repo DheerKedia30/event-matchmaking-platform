@@ -721,6 +721,12 @@ a.group-title:hover {
   .nav-right .avatar {
     display: none; /* very small phones: keep just the "Log out" link */
   }
+  .nav-links a:first-child {
+    display: none; /* the GroupPass logo already goes Home */
+  }
+  .navbar {
+    gap: 8px;
+  }
 }
 
 /* ================= CP4: matchmaking ================= */
@@ -953,4 +959,435 @@ a.group-title:hover {
   .chat {
     height: 400px;
   }
+}
+
+/* ================= CP7: booking, seats, tickets ================= */
+.btn-gold-outline {
+  background: transparent;
+  color: var(--gold);
+  border: 0.5px solid var(--gold);
+}
+.booking-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  border-color: rgba(246, 196, 83, 0.5);
+}
+.booking-banner.booked {
+  border-color: rgba(61, 220, 151, 0.5);
+}
+.booking-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  max-width: 620px;
+}
+
+/* countdown (gold = seats held; red in the last minute) */
+.countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  color: var(--gold);
+}
+.countdown strong {
+  font-family: var(--font-heading);
+  font-size: 34px;
+  line-height: 1;
+}
+.countdown.urgent {
+  color: var(--red);
+}
+
+.booking-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.booking-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.booking-side h3 {
+  margin: 4px 0 0;
+}
+
+/* seat map */
+.seat-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+.stage {
+  width: 80%;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: var(--muted);
+  padding: 6px;
+  margin-bottom: 10px;
+  border-radius: 0 0 40px 40px;
+  border: 0.5px solid var(--border);
+  border-top: 3px solid var(--gold);
+}
+.seat-row {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.row-label {
+  width: 18px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+.seat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 24px;
+  font-size: 10px;
+  font-style: normal;
+  border-radius: 6px 6px 3px 3px;
+  border: 0.5px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+}
+.seat-taken {
+  background: #2a2230;
+  color: #5d5160;
+  border-color: #2a2230;
+}
+.seat-ours {
+  background: rgba(246, 196, 83, 0.25);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.seat-me {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1a1420;
+  font-weight: 700;
+}
+.seat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 12px;
+}
+.seat-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.seat-legend .seat {
+  width: 14px;
+  height: 12px;
+}
+
+/* price + payments */
+.price-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+.price-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.price-list dd {
+  margin: 0;
+}
+.price-total {
+  border-top: 0.5px solid var(--border);
+  padding-top: 6px;
+  font-weight: 600;
+}
+.price-each {
+  font-weight: 600;
+  font-size: 16px;
+}
+.pay-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pay-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pay-list .chip.tiny {
+  margin-left: 0;
+}
+.pay-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  padding-top: 6px;
+  border-top: 0.5px solid var(--border);
+}
+.pay-box .link-btn {
+  align-self: center;
+}
+.pay-box .link-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ticket-box {
+  text-align: center;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px dashed var(--green);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ticket-code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+
+/* My tickets */
+.ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ticket {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0;
+  overflow: hidden;
+}
+.ticket-main {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ticket-stub {
+  padding: 16px 20px;
+  border-left: 1px dashed var(--border);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  background: var(--bg-soft);
+  min-width: 170px;
+}
+
+@media (max-width: 760px) {
+  .booking-layout {
+    grid-template-columns: 1fr;
+  }
+  .booking-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ticket {
+    flex-direction: column;
+  }
+  .ticket-stub {
+    border-left: none;
+    border-top: 1px dashed var(--border);
+  }
+  .countdown strong {
+    font-size: 26px;
+  }
+}
+
+/* Let grid columns shrink on small phones (otherwise wide content pushes the page sideways) */
+.booking-layout > *,
+.room-layout > *,
+.groups-layout > *,
+.details-layout > * {
+  min-width: 0;
+}
+@media (max-width: 380px) {
+  .seat {
+    width: 22px;
+    height: 22px;
+  }
+  .seat-row {
+    gap: 4px;
+  }
+}
+
+/* seat picking (group creator) */
+.seat-btn {
+  cursor: pointer;
+  font-family: var(--font-body);
+  padding: 0;
+  transition: transform 0.1s, border-color 0.1s;
+}
+.seat-btn:not(:disabled):hover {
+  border-color: var(--gold);
+  transform: translateY(-1px);
+}
+.seat-btn:disabled {
+  cursor: not-allowed;
+}
+.seat-btn.seat-me:disabled {
+  cursor: pointer;
+}
+.booking-hint {
+  margin: 6px 0 0;
+  color: var(--gold);
+}
+
+/* ================= floating group chat (booking page) ================= */
+.chat-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 40;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: var(--gold);
+  color: #1a1420;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 0 4px rgba(246, 196, 83, 0.15);
+  transition: transform 0.15s;
+}
+.chat-fab:hover {
+  transform: scale(1.06);
+}
+.chat-fab.is-open {
+  display: none; /* the open chat has its own close button */
+}
+.chat-fab-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--pink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg);
+}
+.chat-dock {
+  position: fixed;
+  z-index: 41;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  animation: dock-in 0.18s ease-out;
+}
+.chat-dock .chat {
+  height: 100%;
+}
+.chat-dock .chat-head {
+  padding-right: 34px; /* room for the close button */
+}
+.chat-dock-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+.chat-dock-close:hover {
+  color: var(--text);
+  background: var(--bg);
+}
+@keyframes dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Wide screens: a side panel on the right; the page moves left so nothing is covered */
+@media (min-width: 1101px) {
+  .chat-dock {
+    top: 76px;
+    right: 16px;
+    bottom: 16px;
+    width: 380px;
+  }
+  .chat-dock-backdrop {
+    display: none;
+  }
+  body.chat-docked .page {
+    max-width: none;
+    margin: 0 412px 0 0;
+  }
+}
+
+/* Tablets and phones: a sheet over the bottom of the screen */
+@media (max-width: 1100px) {
+  .chat-dock-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(5, 3, 8, 0.6);
+  }
+  .chat-dock {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    width: 100%;
+    max-width: 640px;
+    height: 75vh;
+    height: 75dvh;
+    border-radius: 18px 18px 0 0;
+    padding: 14px 14px max(14px, env(safe-area-inset-bottom));
+    animation: none;
+  }
+}
+@media (max-width: 600px) {
+  .chat-fab {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+
+/* Leave room at the bottom so the bubble never covers the Pay button */
+.booking-layout {
+  margin-bottom: 72px;
 }

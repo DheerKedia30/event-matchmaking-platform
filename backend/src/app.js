@@ -6,6 +6,7 @@ const healthRoutes = require("./routes/healthRoutes");
 const authRoutes = require("./routes/authRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const groupRoutes = require("./routes/groupRoutes");
+const bookingRoutes = require("./routes/bookingRoutes");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
@@ -17,6 +18,7 @@ app.use("/health", healthRoutes);
 app.use("/auth", authRoutes);
 app.use("/events", eventRoutes);
 app.use("/groups", groupRoutes);
+app.use(bookingRoutes); // /groups/:id/booking, /bookings/:id/pay, /tickets/mine
 
 app.use(notFound);        // must come AFTER all routes
 app.use(errorHandler);    // must be the LAST thing

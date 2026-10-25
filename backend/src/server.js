@@ -4,6 +4,7 @@ require("dotenv").config();
 const http = require("http");
 const app = require("./app");
 const { attachSockets } = require("./sockets/chatSocket");
+const { startExpiryChecker } = require("./services/bookingExpiry");
 
 const PORT = process.env.PORT || 4000;
 
@@ -12,4 +13,5 @@ attachSockets(server);
 
 server.listen(PORT, () => {
   console.log(`Backend running at http://localhost:${PORT} (API + live chat)`);
+  startExpiryChecker(); // frees seats + refunds when a payment window runs out
 });

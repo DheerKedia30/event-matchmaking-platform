@@ -24,6 +24,7 @@ export default function Navbar() {
           <>
             <NavLink to="/" end>Home</NavLink>
             <NavLink to="/my-groups">My groups</NavLink>
+            <NavLink to="/tickets">Tickets</NavLink>
             <NavLink to="/profile">Profile</NavLink>
           </>
         )}

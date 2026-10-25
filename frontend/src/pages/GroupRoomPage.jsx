@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getGroup, joinGroup, leaveGroup, lockIn } from "../api/groupsApi";
-import { LOCKED_LEAVE_PENALTY, BLOCK_DURATION_MIN } from "../constants";
+import { LOCKED_LEAVE_PENALTY, BLOCK_DURATION_MIN, MIN_GROUP_TO_BOOK } from "../constants";
 import { formatDateTime, genderSummary } from "../utils/format";
 import FillBar from "../components/groups/FillBar";
 import MemberList from "../components/groups/MemberList";
@@ -101,6 +101,11 @@ export default function GroupRoomPage() {
   const me = group.members.find((m) => m.id === dbUser.id);
   const lockedCount = group.members.filter((m) => m.is_locked_in).length;
   const trustAfter = Math.max(0, dbUser.trust_score - LOCKED_LEAVE_PENALTY);
+  const n = group.member_count;
+  const isCreator = group.creator_id === dbUser.id;
+  const allLocked = n > 0 && lockedCount === n;
+  const canChooseSeats = isCreator && allLocked && n >= MIN_GROUP_TO_BOOK;
+  const waitingFor = group.members.filter((m) => !m.is_locked_in).map((m) => m.name);
 
   return (
     <div>
@@ -122,6 +127,25 @@ export default function GroupRoomPage() {
 
       {error && <Notice type="error">{error}</Notice>}
 
+      {group.is_member && group.status === "sealed" && (
+        <div className="card booking-banner">
+          <div>
+            <strong>Booking in progress.</strong>{" "}
+            <span className="muted small">Seats are held. Everyone needs to pay their share before the timer runs out.</span>
+          </div>
+          <Link to={`/groups/${group.id}/booking`} className="btn">Go to payment</Link>
+        </div>
+      )}
+      {group.is_member && group.status === "booked" && (
+        <div className="card booking-banner booked">
+          <div>
+            <strong className="green-text">Booked!</strong>{" "}
+            <span className="muted small">Everyone paid and your seats are booked.</span>
+          </div>
+          <Link to="/tickets" className="btn">View my ticket</Link>
+        </div>
+      )}
+
       <div className="room-layout">
         <section className="card">
           <h3>Members</h3>
@@ -130,6 +154,20 @@ export default function GroupRoomPage() {
           {group.is_member && (
             <p className="small muted lock-count">
               {lockedCount} of {group.member_count} locked in
+            </p>
+          )}
+          {group.is_member && group.status === "open" && (
+            <p className="small booking-hint">
+              {n < MIN_GROUP_TO_BOOK
+                ? `Booking opens once there are at least ${MIN_GROUP_TO_BOOK} members.`
+                : !allLocked
+                  ? `Booking opens when everyone locks in. Waiting for: ${waitingFor.join(", ")}.`
+                  : isCreator
+                    ? "Everyone's locked in! Choose seats to start booking."
+                    : `Everyone's locked in! ${group.creator_name} is choosing the seats.`}
+              {allLocked && n >= MIN_GROUP_TO_BOOK && !isCreator && (
+                <> <Link to={`/groups/${group.id}/booking`}>Watch</Link></>
+              )}
             </p>
           )}
 
@@ -142,6 +180,15 @@ export default function GroupRoomPage() {
                   ) : (
                     <button className="btn btn-gold" disabled={busy} onClick={() => setModal("lock")}>
                       Lock in
+                    </button>
+                  )}
+                  {isCreator && (
+                    <button
+                      className="btn btn-gold-outline"
+                      disabled={busy || !canChooseSeats}
+                      onClick={() => navigate(`/groups/${group.id}/booking`)}
+                    >
+                      Choose seats
                     </button>
                   )}
                   <button
